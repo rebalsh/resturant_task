@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: restaurant_backend
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - BASE_URL=${BASE_URL:-http://localhost}
+    volumes:
+      - prisma-data:/app/prisma
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./front_end
+      dockerfile: Dockerfile
+    container_name: restaurant_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  prisma-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
