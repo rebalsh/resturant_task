@@ -17,7 +17,6 @@ export const apiServices = {
 
   // --- خدمات الإدارة (الأدمن) ---
   
-  // تم التعديل للاتصال بمسار تسجيل الدخول الحقيقي في الباك آيند
   adminLogin: (credentials: { username: string; password: string }): Promise<AdminAuth> => {
     return apiFetch('/auth/login', {
       method: 'POST',

@@ -1,6 +1,5 @@
 // src/api/axios.ts
 
-// تم التعديل إلى المنفذ 3005 ليطابق إعدادات الدوكر في الباك آيند
 const BASE_URL = '/api';
 
 interface FetchOptions extends RequestInit {
