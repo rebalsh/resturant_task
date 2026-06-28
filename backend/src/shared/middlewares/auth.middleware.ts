@@ -1,3 +1,4 @@
+
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/app-error';
@@ -24,8 +25,13 @@ export const protectAdmin = (req: Request, res: Response, next: NextFunction): v
       throw new AppError('Not authorized, no token provided', 401);
     }
 
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables.');
+    }
+
     // فك التشفير والتحقق من التوكن
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { username: string };
+    const decoded = jwt.verify(token, secret) as { username: string };
 
     // التأكد من أن اليوزر نيم الموجود بالتوكن هو نفسه الأدمن الفعلي
     if (decoded.username !== process.env.ADMIN_USERNAME) {

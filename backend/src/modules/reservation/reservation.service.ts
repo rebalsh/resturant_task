@@ -1,7 +1,4 @@
 
-
-
-
 import nodemailer from 'nodemailer';
 import { ReservationRepository } from './reservation.repository';
 import { CreateReservationInput } from './reservation.schema';
@@ -40,7 +37,7 @@ export class ReservationService {
       const transporter = this.createMailTransporter();
       await transporter.sendMail({
         from: '"Our Restaurant" <noreply@restaurant.com>',
-        to: (reservation as any).email,
+        to: reservation.email, 
         subject: 'Reservation Received! 🎉',
         html: `
           <h1>Hello ${reservation.name},</h1>
@@ -52,7 +49,7 @@ export class ReservationService {
           <p>Thank you for choosing our restaurant!</p>
         `,
       });
-      console.log(`✉️ Confirmation email sent to ${(reservation as any).email} for reservation: ${reservation.id}`);
+      console.log(`✉️ Confirmation email sent to ${reservation.email} for reservation: ${reservation.id}`);
     } catch (mailError) {
       console.error('❌ Failed to send confirmation email:', mailError);
     }
@@ -76,7 +73,7 @@ export class ReservationService {
 
       await transporter.sendMail({
         from: '"Our Restaurant" <noreply@restaurant.com>',
-        to: (existing as any).email,
+        to: existing.email, 
         subject: isConfirmed ? 'Reservation Confirmed! 🥂' : 'Reservation Cancelled 😔',
         html: `
           <h1>Hello ${existing.name},</h1>
@@ -84,14 +81,13 @@ export class ReservationService {
           <h2 style="color: ${isConfirmed ? 'green' : 'red'};">${status.toUpperCase()}</h2>
           <p>${isConfirmed ? 'We are excited to welcome you to our restaurant! See you soon.' : 'Unfortunately, we cannot accommodate your request at this time. We hope to see you another time.'}</p>
           <br/>
-          <!-- إضافة رابط الإلغاء هنا -->
           <p>If you need to cancel this reservation, please use the following link:</p>
           <a href="${cancellationLink}" style="color: red; font-weight: bold;">Cancel My Reservation</a>
           <br/><br/>
           <p>Best regards,<br/>Management Team</p>
         `,
       });
-      console.log(`✉️ Status update email (${status}) sent to ${(existing as any).email}`);
+      console.log(`✉️ Status update email (${status}) sent to ${existing.email}`);
     } catch (mailError) {
       console.error('❌ Failed to send status update email:', mailError);
     }

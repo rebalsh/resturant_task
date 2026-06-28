@@ -1,59 +1,33 @@
+
 import { Request, Response, NextFunction } from 'express';
 import { MenuService } from './menu.service';
 import { AppError } from '../../shared/utils/app-error';
+import { catchAsync } from '../../shared/utils/catch-async';
 
 const menuService = new MenuService();
 
-export const getMenu = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const menu = await menuService.getMenuList();
-    res.status(200).json({ status: 'success', data: menu });
-  } catch (error) {
-    next(error);
-  }
-};
+export const getMenu = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const menu = await menuService.getMenuList();
+  res.status(200).json({ status: 'success', data: menu });
+});
 
-export const createDish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const newDish = await menuService.addDish(req.body);
-    res.status(201).json({ status: 'success', data: newDish });
-  } catch (error) {
-    next(error);
-  }
-};
+export const createDish = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const newDish = await menuService.addDish(req.body);
+  res.status(201).json({ status: 'success', data: newDish });
+});
 
-// تم تعديل الدالة لتشمل التحديث الشامل
-export const updateDish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
+export const updateDish = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id) throw new AppError('Dish ID is required', 400);
 
-    if (!id) {
-      throw new AppError('Dish ID is required', 400);
-    }
+  const updatedDish = await menuService.updateDish(id as string, req.body);
+  res.status(200).json({ status: 'success', data: updatedDish });
+});
 
-    const dishId = id as string;
-    const updatedDish = await menuService.updateDish(dishId, req.body);
+export const deleteDish = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id) throw new AppError('Dish ID is required', 400);
 
-    res.status(200).json({ status: 'success', data: updatedDish });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// إضافة دالة الحذف
-export const deleteDish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      throw new AppError('Dish ID is required', 400);
-    }
-
-    const dishId = id as string;
-    await menuService.deleteDish(dishId);
-
-    res.status(200).json({ status: 'success', message: 'Dish deleted successfully' });
-  } catch (error) {
-    next(error);
-  }
-};
+  await menuService.deleteDish(id as string);
+  res.status(200).json({ status: 'success', message: 'Dish deleted successfully' });
+});
