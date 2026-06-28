@@ -22,19 +22,37 @@ export const createDish = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const updatePrice = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// تم تعديل الدالة لتشمل التحديث الشامل
+export const updateDish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const { price } = req.body;
 
     if (!id) {
       throw new AppError('Dish ID is required', 400);
     }
 
-    const dishId = id as string; // حسم نوع الـ id للـ Strict mode
-    const updatedDish = await menuService.updateDishPrice(dishId, price);
+    const dishId = id as string;
+    const updatedDish = await menuService.updateDish(dishId, req.body);
 
     res.status(200).json({ status: 'success', data: updatedDish });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// إضافة دالة الحذف
+export const deleteDish = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError('Dish ID is required', 400);
+    }
+
+    const dishId = id as string;
+    await menuService.deleteDish(dishId);
+
+    res.status(200).json({ status: 'success', message: 'Dish deleted successfully' });
   } catch (error) {
     next(error);
   }

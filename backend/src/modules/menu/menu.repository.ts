@@ -1,11 +1,11 @@
 import { prisma } from '../../shared/config/database';
-import { CreateMenuInput } from './menu.schema';
+import { CreateMenuInput, UpdateMenuInput } from './menu.schema';
 
 export class MenuRepository {
   // 1. جلب كل الأطباق
   public async findAll() {
     return await prisma.menu.findMany({
-      orderBy: { dishName: 'asc' }, // ترتيب أبجدي للأطباق
+      orderBy: { dishName: 'asc' }, 
     });
   }
 
@@ -26,11 +26,18 @@ export class MenuRepository {
     });
   }
 
-  // 4. تحديث سعر الطبق (للأدمن)
-  public async updatePrice(id: string, price: number) {
+  // 4. تحديث الطبق (الاسم، السعر، أو كلاهما)
+  public async update(id: string, data: UpdateMenuInput) {
     return await prisma.menu.update({
       where: { id },
-      data: { price },
+      data, // سيتم تحديث الحقول المرسلة فقط
+    });
+  }
+
+  // 5. حذف الطبق
+  public async delete(id: string) {
+    return await prisma.menu.delete({
+      where: { id },
     });
   }
 }

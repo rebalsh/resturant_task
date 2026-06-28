@@ -33,7 +33,6 @@ export class ReservationService {
   }
 
   public async createReservation(input: CreateReservationInput) {
-    // تم حذف التحقق من ازدواجية الوقت
     const reservation = await this.reservationRepository.create(input);
     const cancellationLink = this.getCancellationLink(reservation.id);
 

@@ -1,5 +1,5 @@
 import { MenuRepository } from './menu.repository';
-import { CreateMenuInput } from './menu.schema';
+import { CreateMenuInput, UpdateMenuInput } from './menu.schema';
 import { AppError } from '../../shared/utils/app-error';
 
 export class MenuService {
@@ -13,11 +13,21 @@ export class MenuService {
     return await this.menuRepository.create(input);
   }
 
-  public async updateDishPrice(id: string, price: number) {
+  // تحديث الطبق (اسم أو سعر)
+  public async updateDish(id: string, input: UpdateMenuInput) {
     const existing = await this.menuRepository.findById(id);
     if (!existing) {
       throw new AppError('Dish not found in the menu', 404);
     }
-    return await this.menuRepository.updatePrice(id, price);
+    return await this.menuRepository.update(id, input);
+  }
+
+  // حذف الطبق
+  public async deleteDish(id: string) {
+    const existing = await this.menuRepository.findById(id);
+    if (!existing) {
+      throw new AppError('Dish not found in the menu', 404);
+    }
+    return await this.menuRepository.delete(id);
   }
 }
