@@ -1,6 +1,76 @@
+# version: '3.8'
+
+# services:
+#   backend:
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
+#     container_name: restaurant_backend
+#     ports:
+#       - "3005:3005"
+#     environment:
+#       - NODE_ENV=production
+#       - PORT=${PORT}
+#       - DATABASE_URL=${DATABASE_URL}
+#       - ADMIN_USERNAME=${ADMIN_USERNAME}
+#       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+#       - JWT_SECRET=${JWT_SECRET}
+#       - EMAIL_HOST=${EMAIL_HOST}
+#       - EMAIL_PORT=${EMAIL_PORT}
+#       - EMAIL_USER=${EMAIL_USER}
+#       - EMAIL_PASS=${EMAIL_PASS}
+#       - BASE_URL=${BASE_URL:-http://localhost}
+#     volumes:
+#       - prisma-data:/app/prisma
+#     networks:
+#       - app-network
+
+#   frontend:
+#     build:
+#       context: ./front_end
+#       dockerfile: Dockerfile
+#     container_name: restaurant_frontend
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+#     networks:
+#       - app-network
+
+# volumes:
+#   prisma-data:
+#     driver: local
+
+# networks:
+#   app-network:
+#     driver: bridge
+
+
 version: '3.8'
 
 services:
+  # ----- 1. قاعدة البيانات PostgreSQL -----
+  db:
+    image: postgres:15-alpine
+    container_name: restaurant_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: restaurant_db   # هذا يكفي لإنشاء قاعدة البيانات تلقائياً!
+    ports:
+      - "5433:5432"   # عشان تقدر تتصل من برا (اختياري)
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ----- 2. الباك إند (Node.js) -----
   backend:
     build:
       context: ./backend
@@ -11,7 +81,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=${PORT}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL}        # سيأخذها من ملف .env الجذر
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
@@ -20,11 +90,13 @@ services:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - BASE_URL=${BASE_URL:-http://localhost}
-    volumes:
-      - prisma-data:/app/prisma
+    depends_on:
+      db:
+        condition: service_healthy    # ينتظر حتى تصير قاعدة البيانات جاهزة
     networks:
       - app-network
 
+  # ----- 3. الفرونت إند (Nginx) -----
   frontend:
     build:
       context: ./front_end
@@ -37,10 +109,13 @@ services:
     networks:
       - app-network
 
+# ----- مجلدات التخزين (Volumes) -----
 volumes:
-  prisma-data:
+  postgres-data:    # هذا يحفظ بيانات البوستجرس حتى لو حذفنا الحاوية
     driver: local
+  # ملاحظة: لم نعد نستخدم prisma-data لأن SQLite ألغيت
 
+# ----- الشبكة الداخلية -----
 networks:
   app-network:
     driver: bridge

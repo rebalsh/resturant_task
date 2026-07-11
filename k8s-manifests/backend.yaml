@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restaurant-backend-deployment
+  labels:
+    app: restaurant-backend
+spec:
+  replicas: 1 # عدد النسخ التي تريد تشغيلها من الباك إيند
+  selector:
+    matchLabels:
+      app: restaurant-backend
+  template:
+    metadata:
+      labels:
+        app: restaurant-backend
+    spec:
+      containers:
+      - name: backend-container
+        image: docker.io/rebal1sh/restaurant-backend:latest # صورتك المرفوعة
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3005
+        # المتغيرات البيئية الخاصة بمشروعك (استبدل القيم التجريبية بقيمك الفعلية)
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3005"
+        - name: DATABASE_URL
+          value: "postgresql://username:password@your-database-host:5432/db_name" # رابط قاعدة بياناتك الجديدة
+        - name: ADMIN_USERNAME
+          value: "admin"
+        - name: ADMIN_PASSWORD
+          value: "secret_password"
+        - name: JWT_SECRET
+          value: "super_secret_jwt_key"
+        - name: EMAIL_HOST
+          value: "smtp.mailtrap.io"
+        - name: EMAIL_PORT
+          value: "2525"
+        - name: EMAIL_USER
+          value: "your_email_user"
+        - name: EMAIL_PASS
+          value: "your_email_password"
+        - name: BASE_URL
+          value: "http://localhost:3005"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restaurant-backend-service
+spec:
+  type: LoadBalancer # يتيح لـ Docker Desktop ربط المنفذ بـ localhost مباشرة
+  selector:
+    app: restaurant-backend
+  ports:
+    - protocol: TCP
+      port: 3005       # البورت الخارجي للوصول من المتصفح
+      targetPort: 3005 # بورت التطبيق الداخلي
