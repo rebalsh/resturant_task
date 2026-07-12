@@ -27,7 +27,7 @@ spec:
         - name: PORT
           value: "3005"
         - name: DATABASE_URL
-          value: "postgresql://username:password@your-database-host:5432/db_name" # رابط قاعدة بياناتك الجديدة
+          value: "postgresql://restaurant_admin:supersecret123@postgres-service:5432/restaurant_db?schema=public"
         - name: ADMIN_USERNAME
           value: "admin"
         - name: ADMIN_PASSWORD
@@ -48,7 +48,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: restaurant-backend-service
+  name: backend
 spec:
   type: LoadBalancer # يتيح لـ Docker Desktop ربط المنفذ بـ localhost مباشرة
   selector:
