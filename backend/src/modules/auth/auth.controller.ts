@@ -1,16 +1,22 @@
-
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from './auth.service';
+import { AppError } from '../../shared/utils/app-error';
+import { generateToken } from '../../shared/utils/generate-token';
 import { catchAsync } from '../../shared/utils/catch-async';
 
-const authService = new AuthService();
-
 export const login = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const result = await authService.loginAdmin(req.body);
-  
+  const { username, password } = req.body;
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (username !== adminUsername || password !== adminPassword) {
+    throw new AppError('Invalid username or password', 401);
+  }
+
+  const token = generateToken({ username });
+
   res.status(200).json({
     status: 'success',
     message: 'Logged in successfully',
-    data: result
+    data: { token }
   });
 });

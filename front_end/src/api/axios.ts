@@ -1,6 +1,6 @@
 // src/api/axios.ts
 
-const BASE_URL = '/api';
+const BASE_URL = 'http://localhost:3005/api';
 
 interface FetchOptions extends RequestInit {
   body?: any;
