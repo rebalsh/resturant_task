@@ -1,4 +1,78 @@
 
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: restaurant-backend-deployment
+#   labels:
+#     app: restaurant-backend
+# spec:
+#   replicas: 1 # عدد النسخ
+#   selector:
+#     matchLabels:
+#       app: restaurant-backend
+#   template:
+#     metadata:
+#       labels:
+#         app: restaurant-backend
+#     spec:
+#       containers:
+#       - name: backend-container
+#         image: docker.io/rebal1sh/restaurant-backend:latest # صورتك المرفوعة
+#         imagePullPolicy: Always
+#         ports:
+#         - containerPort: 3005
+#         env:
+#         - name: NODE_ENV
+#           value: "production"
+#         - name: PORT
+#           value: "3005"
+#         # التغيير الأهم: تحويل الرابط ليقرأ ملف SQLite داخل الحاوية
+#         - name: DATABASE_URL
+#           value: "file:./dev.db" 
+#         - name: ADMIN_USERNAME
+#           value: "admin"
+#         - name: ADMIN_PASSWORD
+#           value: "SuperSecretAdminPassword2026"
+#         - name: JWT_SECRET
+#           value: "your_ultra_secure_jwt_secret_key_here"
+#         - name: EMAIL_HOST
+#           value: "smtp.gmail.com"
+#         - name: EMAIL_PORT
+#           value: "587"
+#         - name: EMAIL_SECURE
+#           value: "false"
+#         - name: EMAIL_USER
+#           value: "mhd.mosrafa@gmail.com"
+#         - name: EMAIL_PASS
+#           value: "lcsdqwomvsvvrwel"
+#         - name: BASE_URL
+#           value: "http://localhost:3005"
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: backend
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: restaurant-backend
+#   ports:
+#     - protocol: TCP
+#       port: 3005
+#       targetPort: 3005
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlite-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +80,7 @@ metadata:
   labels:
     app: restaurant-backend
 spec:
-  replicas: 1 # عدد النسخ
+  replicas: 3
   selector:
     matchLabels:
       app: restaurant-backend
@@ -17,7 +91,7 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: docker.io/rebal1sh/restaurant-backend:latest # صورتك المرفوعة
+        image: docker.io/rebal1sh/restaurant-backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3005
@@ -26,9 +100,9 @@ spec:
           value: "production"
         - name: PORT
           value: "3005"
-        # التغيير الأهم: تحويل الرابط ليقرأ ملف SQLite داخل الحاوية
+        # قمنا بتوجيه مسار قاعدة البيانات للمجلد المحمي لضمان عدم ضياع البيانات عند إعادة التشغيل
         - name: DATABASE_URL
-          value: "file:./dev.db" 
+          value: "file:/app/data/dev.db" 
         - name: ADMIN_USERNAME
           value: "admin"
         - name: ADMIN_PASSWORD
@@ -47,6 +121,13 @@ spec:
           value: "lcsdqwomvsvvrwel"
         - name: BASE_URL
           value: "http://localhost:3005"
+        volumeMounts:
+        - name: sqlite-storage
+          mountPath: /app/data
+      volumes:
+      - name: sqlite-storage
+        persistentVolumeClaim:
+          claimName: sqlite-pvc
 ---
 apiVersion: v1
 kind: Service
