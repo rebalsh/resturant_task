@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - old-version
       - master # أضفنا master كاحتمال احتياطي إذا كان فرعك ليس main
 
 jobs:
