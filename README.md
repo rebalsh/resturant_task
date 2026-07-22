@@ -24,3 +24,9 @@ stringData:
   ADMIN_PASSWORD: "SuperSecretAdminPassword2026"
   JWT_SECRET: "your_ultra_secure_jwt_secret_key_here"
   EMAIL_PASS: "lcsdqwomvsvvrwel"
+
+
+
+  Apply the secret before running the deployment:
+
+    kubectl apply -f k8s-manifests/secrets.yaml

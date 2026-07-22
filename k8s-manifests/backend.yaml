@@ -83,6 +83,105 @@
 
 
 
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: sqlite-pvc
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 1Gi
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: restaurant-backend-deployment
+#   labels:
+#     app: restaurant-backend
+# spec:
+#   replicas: 1 # مقصودة 1 وليست أكثر لأننا نستخدم SQLite كقاعدة بيانات محلية لا تدعم الكتابة المتزامنة من عدة Pods. في بيئة العمل الحقيقية سنستخدم PostgreSQL ونرفع الـ replicas.
+#   selector:
+#     matchLabels:
+#       app: restaurant-backend
+#   template:
+#     metadata:
+#       labels:
+#         app: restaurant-backend
+#     spec:
+#       containers:
+#       - name: backend-container
+#         image: docker.io/rebal1sh/restaurant-backend:latest
+#         imagePullPolicy: Always
+#         ports:
+#         - containerPort: 3005
+#         env:
+#         - name: NODE_ENV
+#           value: "production"
+#         - name: PORT
+#           value: "3005"
+#         # قمنا بتوجيه مسار قاعدة البيانات للمجلد المحمي لضمان عدم ضياع البيانات عند إعادة التشغيل
+#         - name: DATABASE_URL
+#           value: "file:/app/data/dev.db" 
+#         - name: ADMIN_USERNAME
+#           value: "admin"
+        
+#         # استدعاء كلمة السر من ملف الـ Secrets
+#         - name: ADMIN_PASSWORD
+#           valueFrom:
+#             secretKeyRef:
+#               name: backend-secrets
+#               key: ADMIN_PASSWORD
+              
+#         # استدعاء مفتاح التشفير من ملف الـ Secrets
+#         - name: JWT_SECRET
+#           valueFrom:
+#             secretKeyRef:
+#               name: backend-secrets
+#               key: JWT_SECRET
+              
+#         - name: EMAIL_HOST
+#           value: "smtp.gmail.com"
+#         - name: EMAIL_PORT
+#           value: "587"
+#         - name: EMAIL_SECURE
+#           value: "false"
+#         - name: EMAIL_USER
+#           value: "mhd.mosrafa@gmail.com"
+          
+#         # استدعاء كلمة سر الإيميل من ملف الـ Secrets
+#         - name: EMAIL_PASS
+#           valueFrom:
+#             secretKeyRef:
+#               name: backend-secrets
+#               key: EMAIL_PASS
+              
+#         - name: BASE_URL
+#           value: "http://localhost:3005"
+#         volumeMounts:
+#         - name: sqlite-storage
+#           mountPath: /app/data
+#       volumes:
+#       - name: sqlite-storage
+#         persistentVolumeClaim:
+#           claimName: sqlite-pvc
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: backend
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: restaurant-backend
+#   ports:
+#     - protocol: TCP
+#       port: 3005
+#       targetPort: 3005
+
+
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -101,7 +200,7 @@ metadata:
   labels:
     app: restaurant-backend
 spec:
-  replicas: 1 # مقصودة 1 وليست أكثر لأننا نستخدم SQLite كقاعدة بيانات محلية لا تدعم الكتابة المتزامنة من عدة Pods. في بيئة العمل الحقيقية سنستخدم PostgreSQL ونرفع الـ replicas.
+  replicas: 1 # مقصودة 1 وليست أكثر لأننا نستخدم SQLite كقاعدة بيانات محلية لا تدعم الكتابة المتزامنة من عدة Pods.
   selector:
     matchLabels:
       app: restaurant-backend
@@ -110,6 +209,19 @@ spec:
       labels:
         app: restaurant-backend
     spec:
+      # --- بداية التعديل: إضافة حاوية التهيئة لقاعدة البيانات ---
+      initContainers:
+      - name: prisma-migration
+        image: docker.io/rebal1sh/restaurant-backend:latest
+        imagePullPolicy: Always
+        command: ["npx", "prisma", "db", "push", "--accept-data-loss"]
+        env:
+        - name: DATABASE_URL
+          value: "file:/app/data/dev.db" 
+        volumeMounts:
+        - name: sqlite-storage
+          mountPath: /app/data
+      # --- نهاية التعديل ---
       containers:
       - name: backend-container
         image: docker.io/rebal1sh/restaurant-backend:latest
@@ -121,26 +233,20 @@ spec:
           value: "production"
         - name: PORT
           value: "3005"
-        # قمنا بتوجيه مسار قاعدة البيانات للمجلد المحمي لضمان عدم ضياع البيانات عند إعادة التشغيل
         - name: DATABASE_URL
           value: "file:/app/data/dev.db" 
         - name: ADMIN_USERNAME
           value: "admin"
-        
-        # استدعاء كلمة السر من ملف الـ Secrets
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: backend-secrets
               key: ADMIN_PASSWORD
-              
-        # استدعاء مفتاح التشفير من ملف الـ Secrets
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: backend-secrets
               key: JWT_SECRET
-              
         - name: EMAIL_HOST
           value: "smtp.gmail.com"
         - name: EMAIL_PORT
@@ -149,14 +255,11 @@ spec:
           value: "false"
         - name: EMAIL_USER
           value: "mhd.mosrafa@gmail.com"
-          
-        # استدعاء كلمة سر الإيميل من ملف الـ Secrets
         - name: EMAIL_PASS
           valueFrom:
             secretKeyRef:
               name: backend-secrets
               key: EMAIL_PASS
-              
         - name: BASE_URL
           value: "http://localhost:3005"
         volumeMounts:
