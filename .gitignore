@@ -11,3 +11,8 @@ node_modules/
 # Ignore OS specific files
 .DS_Store
 Thumbs.db
+
+
+# Ignore K8s Secrets
+k8s-manifests/secrets.yaml
+secrets.yaml
